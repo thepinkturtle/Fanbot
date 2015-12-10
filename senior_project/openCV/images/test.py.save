@@ -1,0 +1,90 @@
+#!/usr/bin/python
+import cv2
+import sys
+import time
+import RPi.GPIO as gpio
+
+#servo setup
+#gpio.setmode(gpio.BOARD)
+#gpio.setup(11,gpio.OUT)
+#servo = gpio.PWM(11,50)
+#servo.start(5)
+#servo.ChangeDutyCycle(0)
+
+#arrays and such
+face = [0, 0, 0, 0]
+CFace = 0
+
+#webcam face detection
+cascPath = sys.argv[1]
+faceCascade = cv2.CascadeClassifier(cascPath)
+
+video_capture = cv2.VideoCapture(0)
+video_capture.set(3, 320)
+video_capture.set(4, 240)
+
+#functions
+def track_face(distance):
+	if distance > 156: #turn right
+		servo_right(distance)
+	if distance < 157: #turn left
+		servo_left(distance)
+
+def servo_left(distance):
+	print "Turning RIGHT"	
+
+def servo_right(distance):
+	print "Turning LEFT"
+
+def center_face(cValue):
+	offset = 4
+	servoPos = 0
+	normalizeConstant = 14
+	dividConstant = 23
+	if cValue >
+	servoPos = normalizeConstant - cValue / dividConstant
+	print "Servo position: {0}".format(cValue)
+ 		#servo.ChangeDutyCycle(servoPos)
+	#else:
+		#servoPos = dValue / dividConstant + offset
+		#print "Servo position: {0}".format(servoPos)		
+		#servo.ChangeDutyCycle(servoPos)
+
+while True:
+	#capture frame by frame
+	ret, frame = video_capture.read()
+	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	faces = faceCascade.detectMultiScale(
+		gray,
+		scaleFactor = 1.1,
+		minNeighbors = 5,
+		minSize = (30, 30),
+		flags = cv2.CASCADE_SCALE_IMAGE)
+	
+	# draw the rectangle around a face
+	for (x, y, w, h) in faces:
+		cv2.rectangle(frame, (x, y), (x+w,y+h), (0,0,255))
+		CFace = (w/2+x)
+	# display the resulting frame
+	cv2.imshow('Video', frame)
+	
+	if cv2.waitKey(1) & 0xFF == ord('q'):
+		break
+	
+	if CFace != 0:
+		center_face(CFace)
+		CFace = 0
+	#	if CFace < 80:
+	#		servo.ChangeDutyCycle(3)
+	#		servo.ChangeDutyCycle(0)
+			
+	#	if CFace > 220:
+	#		servo.ChangeDutyCycle(7.5)
+	#		servo.ChangeDutyCycle(0)
+			
+
+# clean up
+video_capture.release()
+cv2.destroyAllWindows()
+gpio.cleanup()
+	
