@@ -109,8 +109,9 @@ while True:
 		break
 	temp = tempSensor.readObjTempC()		
 	#if we found a face send the position to the servo
-	if CFace != 0 and temp > 16 and temp < 24:
+	if CFace != 0 and temp > 25 and temp < 28:
 		track_face(CFace)
+#		print "temperature: {0}".format(temp)
 #		if temp > 19 and temp < 23:
 
 	else:
