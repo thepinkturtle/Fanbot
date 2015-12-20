@@ -4,7 +4,7 @@ import sys
 import Adafruit_TMP.TMP006 as TMP006
 import time
 import RPi.GPIO as gpio
-
+import thread
 
 #servo setup
 gpio.setmode(gpio.BOARD)
@@ -37,6 +37,13 @@ video_capture.set(3, 320)
 video_capture.set(4, 240)
 
 #functions
+def clap_detect():
+	while True:
+		print"Im threading the needle BABY!"
+		time.sleep(1)
+#		if(blah > 1000):
+#			scan()
+
 
 def scan():
 	global currentPos
@@ -82,6 +89,11 @@ def track_face(new_cValue):
 	time.sleep(.01)
 	servo.ChangeDutyCycle(0)
 
+try: 
+	thread.start_new_thread(clap_detect, ())
+except:
+	print"Sorry, but the Dude could not start your thread"
+
 
 while True:
 		
@@ -93,9 +105,9 @@ while True:
 
 	face = faceCascade.detectMultiScale(
 		frame,
-		scaleFactor = 1.2,
+		scaleFactor = 1.3,
 		minNeighbors = 1,
-		minSize = (50,50),
+		minSize = (40,40),
 		flags = (cv2.CASCADE_DO_CANNY_PRUNING + cv2.CASCADE_FIND_BIGGEST_OBJECT + cv2.CASCADE_DO_ROUGH_SEARCH + cv2.CASCADE_SCALE_IMAGE))
 	#cv2.CASCADE_SCALE_IMAGE
 	# draw the rectangle around a face
@@ -109,7 +121,7 @@ while True:
 		break
 	temp = tempSensor.readObjTempC()		
 	#if we found a face send the position to the servo
-	if CFace != 0 and temp > 25 and temp < 28:
+	if CFace != 0 and temp > 16 and temp < 28:
 		track_face(CFace)
 #		print "temperature: {0}".format(temp)
 #		if temp > 19 and temp < 23:
