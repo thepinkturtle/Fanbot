@@ -24,9 +24,9 @@ def getAdc (channel):
 	percent = int( round( adcOut / 10.24 ) )
 	
 	# Print out 0 - 1023 value and percentage
-	if (adcOut > 800 ):
+	if (adcOut > 400 ):
 		print("ADC output: {0:4d}	Percentage: {1:3}%".format( adcOut, percent))
 		time.sleep(0.1)
 
 while True:
-	getAdc(0)
+	getAdc(1)

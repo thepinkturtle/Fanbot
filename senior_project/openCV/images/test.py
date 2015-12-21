@@ -5,6 +5,8 @@ import Adafruit_TMP.TMP006 as TMP006
 import time
 import RPi.GPIO as gpio
 import thread
+import spidev
+
 
 #servo setup
 gpio.setmode(gpio.BOARD)
@@ -17,6 +19,10 @@ servo.ChangeDutyCycle(0)
 tempSensor = TMP006.TMP006()
 tempSensor.begin(samplerate=TMP006.CFG_8SAMPLE)
 
+#spi setup
+spi = spidev.SpiDev()
+spi.open(0,0)
+
 #arrays and such
 currentPos = 7.5
 CFace = 0
@@ -26,6 +32,9 @@ minPos = 3
 maxPos = 11.5
 rangeRight = 253
 rangeLeft = 138
+startTime = 0
+fClap = False
+sClap = False
 
 #previow ranges 135,255
 #webcam face detection
@@ -37,13 +46,54 @@ video_capture.set(3, 320)
 video_capture.set(4, 240)
 
 #functions
-def clap_detect():
-	while True:
-		print"Im threading the needle BABY!"
-		time.sleep(1)
-#		if(blah > 1000):
-#			scan()
 
+def getAdc (channel):
+
+	global startTime
+	global fClap
+
+	#check for valid channel
+	if ( channel > 7 or channel < 0 ):
+		return -1
+	
+	#preform SPI transaction and store returned bits in 'r'
+	r = spi.xfer( [1, (8 + channel) << 4, 0] )
+	
+	#Filter data bits from returned bits
+	adcOut = ( (r[1] & 3) << 8 ) + r[2]
+	percent = int( round(adcOut / 10.24) )
+	
+	if ( adcOut > 1022 and not fClap ):		
+		startTime = time.clock()
+		fClap = True
+		print "first clap"
+		time.sleep(.1)
+		adcOut = 0
+		startTime = time.time()
+		return
+
+	if ( adcOut > 1022 and fClap and (time.time() - startTime) < 2 ):
+		print "second clap"
+		fClap = False
+		time.sleep(.1)	
+		adcOut = 0
+		servo.ChangeDutyCycle(3)
+	
+def clap_detect():
+	
+	global fClap
+	global startTime
+	#constantly process the sound level in the room
+	while True:	
+		getAdc(0)
+		time.sleep(.000001)
+		if (fClap):		
+			while ( (time.time() - startTime) < 2 ):
+				getAdc(0)
+				time.sleep(.000001)
+
+			print"time's up! at: {0} seconds".format(time.time() - startTime)
+			fClap = False
 
 def scan():
 	global currentPos
@@ -96,8 +146,8 @@ except:
 
 
 while True:
-		
-
+	
+#	time.sleep(.01)	
 	#capture frame by frame
 
 	ret, frame = video_capture.read()
